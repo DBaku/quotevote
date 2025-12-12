@@ -1,7 +1,6 @@
 import { useState } from "react";
 import "./App.css";
 
-// Das neue Interface passend zu Groq
 interface AnalysisResult {
   sentiment: string;
   explanation: string;
@@ -15,23 +14,39 @@ function App() {
 
   const analyzeText = async () => {
     setLoading(true);
-    setResult(null); // Altes Ergebnis ausblenden
+    setResult(null);
     try {
-      const response = await fetch("http://localhost:8000/analyze", {
+      // ---------------------------------------------------------
+      // HIER IST DIE MAGIE:
+      // Wir holen die URL aus der Vercel-Umgebungsvariable.
+      // Wenn die leer ist (auf deinem Laptop), nehmen wir localhost.
+      // ---------------------------------------------------------
+      const backendUrl =
+        import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+
+      console.log("Benutze Backend:", backendUrl); // Zum Debuggen
+
+      // WICHTIG: Nutze Backticks ` (neben der Backspace Taste), nicht ' oder "
+      const response = await fetch(`${backendUrl}/analyze`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: inputText }),
       });
 
+      if (!response.ok) {
+        throw new Error("Netzwerk-Antwort war nicht ok");
+      }
+
       const data = await response.json();
       setResult(data);
     } catch (error) {
       console.error("Fehler:", error);
-      alert("Fehler! Ist das Backend an?");
+      alert("Fehler! Ist das Backend erreichbar?");
     }
     setLoading(false);
   };
 
+  // ... (Der Rest deines JSX Return-Codes bleibt exakt gleich wie vorher)
   return (
     <div
       style={{
@@ -56,14 +71,13 @@ function App() {
             border: "1px solid #ccc",
           }}
         />
-
         <button
           onClick={analyzeText}
           disabled={loading || !inputText}
           style={{
             padding: "15px",
             cursor: loading ? "not-allowed" : "pointer",
-            backgroundColor: "#8e44ad", // Lila für Groq Style :)
+            backgroundColor: "#8e44ad",
             color: "white",
             border: "none",
             borderRadius: "10px",
@@ -81,7 +95,6 @@ function App() {
             marginTop: "30px",
             padding: "25px",
             borderRadius: "15px",
-            // Hier nutzen wir den Farbcode vom Backend
             backgroundColor: result.color_code + "20",
             border: `2px solid ${result.color_code}`,
             textAlign: "left",
