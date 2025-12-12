@@ -1,0 +1,9 @@
+# Python Müll
+__pycache__
+venv/
+.env
+
+# Node Müll
+node_modules/
+dist/
+.DS_Store
